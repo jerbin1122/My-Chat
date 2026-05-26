@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+
+<body>
+
+<input type="text" id="msg">
+
+<button onclick="send()">
+Send
+</button>
+
+<script>
+
+async function send(){
+
+    let input = document.getElementById("msg")
+    await fetch("http://192.168.43.163:8000",{
+        method:"POST",
+        headers:{
+          "Content-Type":"text/plain"
+        },
+        body:input.value
+    })
+    input.value = ""
+}
+
+</script>
+
+</body>
+</html>
