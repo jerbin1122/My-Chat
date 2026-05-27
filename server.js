@@ -41,7 +41,7 @@ let messages = data.messages;
 
 let users = data.users;
 
-/* NEW FEATURE */
+/* ONLINE USERS */
 let onlineUsers = {};
 
 /* FRONTEND */
@@ -58,24 +58,52 @@ io.on("connection", (socket)=>{
     /* SEND OLD MESSAGES */
     socket.emit("load messages", messages);
 
-    /* RESTORE SAVED NAME */
+    /* GET SAVED NAME */
     socket.on("get saved name", (userId)=>{
 
-        /* SAVE USERID TO SOCKET */
         socket.userId = userId;
 
+        /* OLD USER */
         if(users[userId]){
 
             socket.emit("saved name", users[userId]);
 
-            /* USER ONLINE WHEN APP OPENS */
             onlineUsers[userId] = users[userId];
-
-            io.emit(
-                "users online",
-                Object.values(onlineUsers)
-            );
         }
+        else{
+
+            /* NEW USER */
+            onlineUsers[userId] = "New User";
+        }
+
+        io.emit(
+            "users online",
+            Object.values(onlineUsers)
+        );
+    });
+
+    /* SAVE NAME */
+    socket.on("save name", (data)=>{
+
+        if(!data.userId) return;
+
+        if(!data.name) return;
+
+        /* SAVE USER */
+        users[data.userId] = data.name;
+
+        /* UPDATE ONLINE USER */
+        onlineUsers[data.userId] = data.name;
+
+        saveData({
+            messages:messages,
+            users:users
+        });
+
+        io.emit(
+            "users online",
+            Object.values(onlineUsers)
+        );
     });
 
     /* SEND MESSAGE */
@@ -92,7 +120,7 @@ io.on("connection", (socket)=>{
         /* SAVE USER NAME */
         users[dataMsg.userId] = dataMsg.name;
 
-        /* USER ONLINE */
+        /* UPDATE ONLINE USER */
         onlineUsers[dataMsg.userId] = dataMsg.name;
 
         const msgData = {
@@ -135,15 +163,34 @@ io.on("connection", (socket)=>{
     /* DISCONNECT */
     socket.on("disconnect", ()=>{
 
-        if(socket.userId){
+        let userId = socket.userId;
 
-            delete onlineUsers[socket.userId];
+        setTimeout(()=>{
 
-            io.emit(
-                "users online",
-                Object.values(onlineUsers)
-            );
-        }
+            let stillConnected = false;
+
+            for(let [id,s] of io.of("/").sockets){
+
+                if(s.userId === userId){
+
+                    stillConnected = true;
+
+                    break;
+                }
+            }
+
+            /* REMOVE ONLY IF REALLY OFFLINE */
+            if(!stillConnected){
+
+                delete onlineUsers[userId];
+
+                io.emit(
+                    "users online",
+                    Object.values(onlineUsers)
+                );
+            }
+
+        }, 3000);
 
         console.log("User disconnected");
     });
