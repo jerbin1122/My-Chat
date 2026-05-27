@@ -10,23 +10,24 @@ const io = new Server(server);
 
 const FILE = path.join(__dirname, "messages.json");
 
-// Load messages
-function loadMessages() {
+/* LOAD DATA */
+function loadData() {
     try {
         return JSON.parse(fs.readFileSync(FILE, "utf8"));
     } catch (err) {
-        return [];
+        return { messages: [], users: {} };
     }
 }
 
-// Save messages
-function saveMessages(messages) {
-    fs.writeFileSync(FILE, JSON.stringify(messages, null, 2));
+/* SAVE DATA */
+function saveData(data) {
+    fs.writeFileSync(FILE, JSON.stringify(data, null, 2));
 }
 
-let messages = loadMessages();
+let data = loadData();
+let messages = data.messages;
+let users = data.users;
 
-// Serve frontend
 app.get("/", (req, res) => {
     res.sendFile(path.join(__dirname, "index.html"));
 });
@@ -34,35 +35,46 @@ app.get("/", (req, res) => {
 io.on("connection", (socket) => {
     console.log("User connected");
 
-    // send old messages
+    // send chat history
     socket.emit("load messages", messages);
 
-    // new message
-    socket.on("chat message", (data) => {
+    // send online users
+    io.emit("users online", Object.values(users));
 
-        if (!data || !data.name || !data.msg) return;
+    socket.on("chat message", (dataMsg) => {
+
+        if (!dataMsg || !dataMsg.name || !dataMsg.msg) return;
+
+        // SAVE USER ON SERVER (NO LOCALSTORAGE)
+        users[socket.id] = dataMsg.name;
 
         const msgData = {
-            name: data.name,
-            msg: data.msg,
+            name: dataMsg.name,
+            msg: dataMsg.msg,
             time: Date.now()
         };
 
         messages.push(msgData);
-        saveMessages(messages);
+
+        saveData({ messages, users });
 
         io.emit("chat message", msgData);
+        io.emit("users online", Object.values(users));
     });
 
-    // 🔥 CLEAR MESSAGES (NEW ADDED PART)
     socket.on("clear messages", () => {
-        messages = [];              // clear memory
-        saveMessages(messages);     // clear file
-
-        io.emit("load messages", []); // update all clients
+        messages = [];
+        saveData({ messages, users });
+        io.emit("load messages", []);
     });
 
     socket.on("disconnect", () => {
+        delete users[socket.id];
+
+        saveData({ messages, users });
+
+        io.emit("users online", Object.values(users));
+
         console.log("User disconnected");
     });
 });
