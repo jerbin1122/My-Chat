@@ -41,6 +41,9 @@ let messages = data.messages;
 
 let users = data.users;
 
+/* NEW FEATURE */
+let onlineUsers = {};
+
 /* FRONTEND */
 app.get("/", (req,res)=>{
 
@@ -58,9 +61,20 @@ io.on("connection", (socket)=>{
     /* RESTORE SAVED NAME */
     socket.on("get saved name", (userId)=>{
 
+        /* SAVE USERID TO SOCKET */
+        socket.userId = userId;
+
         if(users[userId]){
 
             socket.emit("saved name", users[userId]);
+
+            /* USER ONLINE WHEN APP OPENS */
+            onlineUsers[userId] = users[userId];
+
+            io.emit(
+                "users online",
+                Object.values(onlineUsers)
+            );
         }
     });
 
@@ -77,6 +91,9 @@ io.on("connection", (socket)=>{
 
         /* SAVE USER NAME */
         users[dataMsg.userId] = dataMsg.name;
+
+        /* USER ONLINE */
+        onlineUsers[dataMsg.userId] = dataMsg.name;
 
         const msgData = {
             name:dataMsg.name,
@@ -95,8 +112,11 @@ io.on("connection", (socket)=>{
         /* SEND TO EVERYONE */
         io.emit("chat message", msgData);
 
-        /* ONLINE USERS */
-        io.emit("users online", Object.values(users));
+        /* UPDATE ONLINE USERS */
+        io.emit(
+            "users online",
+            Object.values(onlineUsers)
+        );
     });
 
     /* CLEAR CHAT */
@@ -112,7 +132,18 @@ io.on("connection", (socket)=>{
         io.emit("load messages", []);
     });
 
+    /* DISCONNECT */
     socket.on("disconnect", ()=>{
+
+        if(socket.userId){
+
+            delete onlineUsers[socket.userId];
+
+            io.emit(
+                "users online",
+                Object.values(onlineUsers)
+            );
+        }
 
         console.log("User disconnected");
     });
