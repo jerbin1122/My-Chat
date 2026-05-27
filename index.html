@@ -7,111 +7,111 @@
 <title>My Chat</title>
 
 <style>
-body {
-    margin: 0;
-    font-family: sans-serif;
-    background: #fafafa;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
+body{
+    margin:0;
+    font-family:sans-serif;
+    background:#fafafa;
+    height:100vh;
+    display:flex;
+    flex-direction:column;
 }
 
-.header {
-    position: fixed;
-    top: 0;
-    width: 100%;
-    background: white;
-    padding: 12px 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    border-bottom: 1px solid #ddd;
-    box-sizing: border-box;
-    z-index: 100;
+.header{
+    position:fixed;
+    top:0;
+    width:100%;
+    background:white;
+    padding:12px 16px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    border-bottom:1px solid #ddd;
+    box-sizing:border-box;
+    z-index:100;
 }
 
-.top-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-weight: bold;
+.top-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-weight:bold;
 }
 
-#onlineUsers {
-    font-size: 13px;
-    color: green;
-    word-break: break-word;
+#onlineUsers{
+    font-size:13px;
+    color:green;
+    word-break:break-word;
 }
 
-.chat-box {
-    flex: 1;
-    overflow-y: auto;
-    padding: 95px 10px 120px;
+.chat-box{
+    flex:1;
+    overflow-y:auto;
+    padding:95px 10px 120px;
 }
 
-.msg {
-    background: white;
-    padding: 10px;
-    margin: 8px 0;
-    border-radius: 12px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+.msg{
+    background:white;
+    padding:10px;
+    margin:8px 0;
+    border-radius:12px;
+    box-shadow:0 1px 3px rgba(0,0,0,0.1);
 }
 
-.name {
-    font-weight: bold;
-    color: #e1306c;
-    margin-bottom: 4px;
+.name{
+    font-weight:bold;
+    color:#e1306c;
+    margin-bottom:4px;
 }
 
-.input-area {
-    position: fixed;
-    bottom: 0;
-    width: 100%;
-    background: white;
-    border-top: 1px solid #ddd;
+.input-area{
+    position:fixed;
+    bottom:0;
+    width:100%;
+    background:white;
+    border-top:1px solid #ddd;
 }
 
-#name {
-    width: 100%;
-    box-sizing: border-box;
-    padding: 10px;
-    border: none;
-    border-bottom: 1px solid #eee;
-    font-size: 16px;
-    outline: none;
+#name{
+    width:100%;
+    box-sizing:border-box;
+    padding:10px;
+    border:none;
+    border-bottom:1px solid #eee;
+    font-size:16px;
+    outline:none;
 }
 
-.msg-row {
-    display: flex;
-    padding: 10px;
-    gap: 8px;
+.msg-row{
+    display:flex;
+    padding:10px;
+    gap:8px;
 }
 
-#msg {
-    flex: 1;
-    padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 25px;
-    font-size: 16px;
-    outline: none;
+#msg{
+    flex:1;
+    padding:12px;
+    border:1px solid #ddd;
+    border-radius:25px;
+    font-size:16px;
+    outline:none;
 }
 
-button {
-    width: 42px;
-    height: 42px;
-    border-radius: 50%;
-    border: none;
-    background: #e1306c;
-    color: white;
-    font-size: 18px;
+button{
+    width:42px;
+    height:42px;
+    border-radius:50%;
+    border:none;
+    background:#e1306c;
+    color:white;
+    font-size:18px;
 }
 
-.clear-btn {
-    width: 70px;
-    height: 35px;
-    border-radius: 5px;
-    background: #e1306c;
-    font-size: 14px;
+.clear-btn{
+    width:70px;
+    height:35px;
+    border-radius:5px;
+    background:#e1306c;
+    font-size:14px;
 }
 </style>
 </head>
@@ -122,7 +122,10 @@ button {
 
     <div class="top-header">
         <span>💬 My Chat</span>
-        <button class="clear-btn" onclick="clearChat()">Clear</button>
+
+        <button class="clear-btn" onclick="clearChat()">
+            Clear
+        </button>
     </div>
 
     <div id="onlineUsers">
@@ -138,8 +141,11 @@ button {
     <input id="name" placeholder="Enter name..." />
 
     <div class="msg-row">
+
         <input id="msg" placeholder="Type message..." />
+
         <button onclick="send()">➤</button>
+
     </div>
 
 </div>
@@ -149,10 +155,33 @@ button {
 <script>
 const socket = io();
 
+/* UNIQUE USER ID */
+let userId = localStorage.getItem("userId");
+
+if(!userId){
+
+    userId = Math.random().toString(36).substring(2);
+
+    localStorage.setItem("userId", userId);
+}
+
+/* GET SAVED NAME FROM SERVER */
+socket.emit("get saved name", userId);
+
+/* RESTORE NAME */
+socket.on("saved name", function(name){
+
+    if(name){
+
+        document.getElementById("name").value = name;
+    }
+});
+
 /* SHOW MESSAGE */
-function showMessage(data) {
+function showMessage(data){
 
     let div = document.createElement("div");
+
     div.className = "msg";
 
     div.innerHTML = `
@@ -167,24 +196,26 @@ function showMessage(data) {
     chat.scrollTop = chat.scrollHeight;
 }
 
-/* SEND MESSAGE */
-function send() {
+/* SEND */
+function send(){
 
     let name = document.getElementById("name").value.trim();
+
     let msg = document.getElementById("msg").value.trim();
 
-    if (!name || !msg) return;
+    if(!name || !msg) return;
 
     socket.emit("chat message", {
-        name,
-        msg
+        userId:userId,
+        name:name,
+        msg:msg
     });
 
     document.getElementById("msg").value = "";
 }
 
 /* LOAD OLD MESSAGES */
-socket.on("load messages", function(allMessages) {
+socket.on("load messages", function(allMessages){
 
     let chat = document.getElementById("chat");
 
@@ -194,25 +225,28 @@ socket.on("load messages", function(allMessages) {
 });
 
 /* NEW MESSAGE */
-socket.on("chat message", function(data) {
+socket.on("chat message", function(data){
 
     showMessage(data);
 });
 
 /* ONLINE USERS */
-socket.on("users online", function(users) {
+socket.on("users online", function(users){
 
     let onlineBox = document.getElementById("onlineUsers");
 
-    if (users.length === 0) {
+    if(users.length === 0){
+
         onlineBox.innerHTML = "Online: No users";
-    } else {
+    }
+    else{
+
         onlineBox.innerHTML = "Online: " + users.join(", ");
     }
 });
 
 /* CLEAR CHAT */
-function clearChat() {
+function clearChat(){
 
     socket.emit("clear messages");
 
@@ -220,9 +254,10 @@ function clearChat() {
 }
 
 /* ENTER KEY SEND */
-document.getElementById("msg").addEventListener("keypress", function(e) {
+document.getElementById("msg").addEventListener("keypress", function(e){
 
-    if (e.key === "Enter") {
+    if(e.key === "Enter"){
+
         send();
     }
 });
