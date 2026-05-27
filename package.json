@@ -2,10 +2,9 @@
   "name": "project1",
   "version": "1.0.0",
   "description": "",
-  "main": "server.js",
+  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
@@ -18,5 +17,9 @@
   "bugs": {
     "url": "https://github.com/jerbin1122/msg-prototype/issues"
   },
-  "homepage": "https://github.com/jerbin1122/msg-prototype#readme"
+  "homepage": "https://github.com/jerbin1122/msg-prototype#readme",
+  "dependencies": {
+    "express": "^5.2.1",
+    "socket.io": "^4.8.3"
+  }
 }

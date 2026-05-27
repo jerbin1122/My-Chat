@@ -1,22 +1,64 @@
-const http=require('http')
-const fs=require('fs').promises
-const path=require('path')
-const server=http.createServer(async (req,res)=>{
-  if(req.method=="GET")
-   { const html=await fs.readFile(path.join(__dirname,'demo.html'),'utf8')
-    res.writeHead(200,{'Content-Type':'text/html'})
-    res.end(html)
-   }
-   else if(req.method=="POST")
-    {
-      var msg=""
-      req.on("data",(datachunck)=>{
-        msg+=datachunck
-      })
-      req.on("end",()=>{
-        console.log(msg)
-        res.end()
-      })
+const express = require("express");
+const http = require("http");
+const { Server } = require("socket.io");
+const path = require("path");
+const fs = require("fs");
+
+const app = express();
+const server = http.createServer(app);
+const io = new Server(server);
+
+const FILE = path.join(__dirname, "messages.json");
+
+// Load messages
+function loadMessages() {
+    try {
+        return JSON.parse(fs.readFileSync(FILE, "utf8"));
+    } catch (err) {
+        return [];
     }
-})
-server.listen(8000,"0.0.0.0",()=>{console.log("server running")})
+}
+
+// Save messages
+function saveMessages(messages) {
+    fs.writeFileSync(FILE, JSON.stringify(messages, null, 2));
+}
+
+let messages = loadMessages();
+
+// Serve frontend
+app.get("/", (req, res) => {
+    res.sendFile(path.join(__dirname, "index.html"));
+});
+
+io.on("connection", (socket) => {
+    console.log("User connected");
+
+    // send old messages
+    socket.emit("load messages", messages);
+
+    // new message
+    socket.on("chat message", (data) => {
+
+        if (!data || !data.name || !data.msg) return;
+
+        const msgData = {
+            name: data.name,
+            msg: data.msg,
+            time: Date.now()
+        };
+
+        messages.push(msgData);
+        saveMessages(messages);
+
+        io.emit("chat message", msgData);
+    });
+
+    socket.on("disconnect", () => {
+        console.log("User disconnected");
+    });
+});
+
+server.listen(3000, () => {
+    console.log("Server running on http://localhost:3000");
+});
