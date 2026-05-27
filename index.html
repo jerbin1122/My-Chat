@@ -110,7 +110,6 @@ button {
     font-size: 18px;
 }
 
-/* NEW CLEAR BUTTON */
 .clear-btn {
     width: 25%;
     border-radius: 0;
@@ -134,7 +133,6 @@ button {
         </button>
     </div>
 
-    <!-- NEW FEATURE -->
     <div id="onlineUsers">
         Online: No users
     </div>
@@ -159,7 +157,7 @@ button {
 <script>
 const socket = io();
 
-/* NEW FEATURE */
+/* USER ID */
 let userId = localStorage.getItem("userId");
 
 if(!userId){
@@ -169,10 +167,10 @@ if(!userId){
     localStorage.setItem("userId", userId);
 }
 
-/* NEW FEATURE */
+/* GET SAVED NAME */
 socket.emit("get saved name", userId);
 
-/* NEW FEATURE */
+/* RESTORE NAME */
 socket.on("saved name", function(name){
 
     if(name){
@@ -181,6 +179,20 @@ socket.on("saved name", function(name){
     }
 });
 
+/* SAVE NAME LIVE */
+document.getElementById("name").addEventListener("change", function(){
+
+    let name = this.value.trim();
+
+    if(!name) return;
+
+    socket.emit("save name", {
+        userId:userId,
+        name:name
+    });
+});
+
+/* SHOW MESSAGE */
 function showMessage(data) {
 
     let div = document.createElement("div");
@@ -199,6 +211,7 @@ function showMessage(data) {
     chat.scrollTop = chat.scrollHeight;
 }
 
+/* SEND MESSAGE */
 function send() {
 
     let name = document.getElementById("name").value;
@@ -216,6 +229,7 @@ function send() {
     document.getElementById("msg").value = "";
 }
 
+/* LOAD OLD MESSAGES */
 socket.on("load messages", function(allMessages) {
 
     document.getElementById("chat").innerHTML = "";
@@ -223,12 +237,13 @@ socket.on("load messages", function(allMessages) {
     allMessages.forEach(showMessage);
 });
 
+/* NEW MESSAGE */
 socket.on("chat message", function(data) {
 
     showMessage(data);
 });
 
-/* NEW FEATURE */
+/* ONLINE USERS */
 socket.on("users online", function(users){
 
     let box = document.getElementById("onlineUsers");
@@ -243,6 +258,7 @@ socket.on("users online", function(users){
     }
 });
 
+/* CLEAR CHAT */
 function clearChat() {
 
     socket.emit("clear messages");
@@ -250,7 +266,7 @@ function clearChat() {
     document.getElementById("chat").innerHTML = "";
 }
 
-/* NEW FEATURE */
+/* ENTER SEND */
 document.getElementById("msg").addEventListener("keypress", function(e){
 
     if(e.key === "Enter"){
