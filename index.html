@@ -21,10 +21,13 @@ body {
     top: 0;
     width: 100%;
     background: white;
-    padding: 12px;
-    text-align: center;
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     font-weight: bold;
     border-bottom: 1px solid #ddd;
+    box-sizing: border-box;
 }
 
 .chat-box {
@@ -92,18 +95,22 @@ button {
 
 /* NEW CLEAR BUTTON */
 .clear-btn {
-    width: 100%;
+    width: 25%;
     border-radius: 0;
-    background: #444;
+    background:#e1306c;
     font-size: 14px;
     height: 35px;
+    border-radius:5px;
 }
 </style>
 </head>
 
 <body>
 
-<div class="header">💬 My Chat</div>
+<div class="header">
+   <span>💬 My Chat</span>
+   <button class="clear-btn" onclick="clearChat()">Clear</button>
+</div>
 
 <div id="chat" class="chat-box"></div>
 
@@ -115,7 +122,6 @@ button {
         <button onclick="send()">➤</button>
     </div>
 
-    <button class="clear-btn" onclick="clearChat()">Clear Messages</button>
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
